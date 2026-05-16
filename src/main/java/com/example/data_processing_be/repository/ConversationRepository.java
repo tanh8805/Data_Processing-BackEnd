@@ -5,8 +5,11 @@ import com.example.data_processing_be.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface ConversationRepository extends JpaRepository<Conversation, UUID> {
   List<Conversation> findByUserOrderByCreatedAtDesc(User user);
+
+  Optional<Conversation> findByConversationId(UUID conversationId);
 }

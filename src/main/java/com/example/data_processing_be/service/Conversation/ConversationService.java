@@ -10,6 +10,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -46,6 +47,14 @@ public class ConversationService {
             .title(title)
             .status("ACTIVE")
             .build();
+
+    return conversationRepository.save(conversation);
+  }
+  public Conversation updateConversationStatus(UUID conversationId, String status) {
+    Conversation conversation = conversationRepository.findByConversationId(conversationId)
+            .orElseThrow(() -> new RuntimeException("Không tìm thấy conversation"));
+
+    conversation.setStatus(status);
 
     return conversationRepository.save(conversation);
   }
