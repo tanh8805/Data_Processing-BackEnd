@@ -20,7 +20,7 @@ jobs:
           distribution: temurin
           java-version: 17
       - name: Build project
-        run: mvn clean package
+        run: ./gradlew build
 
   push-ghcr:
     runs-on: ubuntu-latest
