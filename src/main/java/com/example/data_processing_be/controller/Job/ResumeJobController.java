@@ -18,10 +18,11 @@ import java.util.UUID;
 @RequestMapping("/api/jobs")
 @RequiredArgsConstructor
 public class ResumeJobController {
+
   private final ConversationService conversationService;
   private final UserRepository userRepository;
 
-  @Value("${python.api.url:http://localhost:8000}")
+  @Value("${python.api.url}")
   private String pythonApiUrl;
 
   @PostMapping("/{conversationId}/resume")
@@ -31,7 +32,6 @@ public class ResumeJobController {
   ) {
     try {
       String email = SecurityContextHolder.getContext().getAuthentication().getName();
-
       User user = userRepository.findByEmail(email)
               .orElseThrow(() -> new RuntimeException("Không tìm thấy user"));
 
@@ -41,25 +41,13 @@ public class ResumeJobController {
       requestBody.put("answer", answer);
 
       RestTemplate restTemplate = new RestTemplate();
-
-      Object pythonResponse = restTemplate.postForObject(
+      restTemplate.postForObject(
               pythonApiUrl + "/jobs/resume",
               requestBody,
               Object.class
       );
-      if (pythonResponse instanceof Map<?, ?> responseMap) {
-        Object type = responseMap.get("type");
 
-        if ("JOB_DONE".equals(type)) {
-          conversationService.updateConversationStatus(conversationId, "DONE");
-        }
-
-        if ("INTERRUPT".equals(type)) {
-          conversationService.updateConversationStatus(conversationId, "WAITING_USER");
-        }
-      }
-
-      return ResponseEntity.ok(pythonResponse);
+      return ResponseEntity.ok().build();
 
     } catch (Exception e) {
       return ResponseEntity.status(500).body("Resume job thất bại: " + e.getMessage());
