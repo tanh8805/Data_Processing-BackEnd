@@ -31,6 +31,12 @@ public class JobService {
         return jobRepository.save(job);
     }
 
+    public String getInputFilePath(UUID conversationId) {
+        Job job = jobRepository.findByConversationId(conversationId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy job"));
+        return job.getInputFilePath();
+    }
+
     public void saveEvent(UUID conversationId, String eventType, Object payload) {
         Job job = jobRepository.findByConversationId(conversationId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy job"));
@@ -68,6 +74,7 @@ public class JobService {
         job.setValidRowsCount(validCount);
         job.setInvalidRowsCount(invalidCount);
         job.setTotalRows(validCount + invalidCount);
+        job.setOutputFilePath((String) payload.get("output_file_path"));
 
         jobRepository.save(job);
     }
