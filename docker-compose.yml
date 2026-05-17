@@ -18,15 +18,15 @@ services:
       - pg_data:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
 
-  backend:
-    image: data_processing_be
-    container_name: data_processing_be
-    ports:
-      - "8080:8080"
-    depends_on:
-      postgres:
-        condition: service_healthy
-    restart: unless-stopped
+#  backend:
+#    image: data_processing_be
+#    container_name: data_processing_be
+#    ports:
+#      - "8080:8080"
+#    depends_on:
+#      postgres:
+#        condition: service_healthy
+#    restart: unless-stopped
 
 volumes:
   pg_data:
