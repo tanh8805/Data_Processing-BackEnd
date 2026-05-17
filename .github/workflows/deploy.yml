@@ -15,6 +15,13 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v4
       - run: docker compose up -d
+      - name: Wait for postgres to be healthy
+        run: |
+          for i in {1..20}; do
+            docker compose exec -T postgres pg_isready -U tuananh -d data_processing_be && break
+            echo "Waiting for postgres... ($i)"
+            sleep 3
+          done
       - name: Set up Java
         uses: actions/setup-java@v3
         with:
