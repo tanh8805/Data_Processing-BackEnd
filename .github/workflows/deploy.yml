@@ -30,6 +30,8 @@ jobs:
       - run: chmod +x gradlew
       - name: Build project
         run: ./gradlew test
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/data_processing_be
 
   push-ghcr:
     runs-on: ubuntu-latest
