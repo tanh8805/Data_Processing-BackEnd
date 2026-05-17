@@ -37,6 +37,8 @@ jobs:
           SPRING_DATASOURCE_PASSWORD: ${{ secrets.DB_PASSWORD }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           JWT_EXPIRATION: 300000
+          UPLOAD_DIR: /tmp/uploads          
+          PYTHON_API_URL: http://localhost:8001
 
   push-ghcr:
     runs-on: ubuntu-latest
