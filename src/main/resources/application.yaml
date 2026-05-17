@@ -9,10 +9,9 @@ spring:
     show-sql: false
 
   datasource:
-    url: jdbc:postgresql://${db.host}:5432/data_processing_be
-    username: tuananh
-    password: ${db.password}
-    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://${DB_HOST}:5432/data_processing_be
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
 
 jwt:
   secret: ${JWT_SECRET}
