@@ -23,7 +23,7 @@ public class JwtFilterChain extends OncePerRequestFilter {
 
   @Override
   protected boolean shouldNotFilter(HttpServletRequest request) {
-    String path = request.getRequestURI();
+    String path = request.getServletPath();
     return path.startsWith("/api/auth/");
   }
 
@@ -40,6 +40,7 @@ public class JwtFilterChain extends OncePerRequestFilter {
         response.setContentType("application/json");
         response.setStatus(401);
         response.getWriter().write("{\"message\":\"Token hết hạn\"}");
+        return;
       }
       if (SecurityContextHolder.getContext().getAuthentication() == null) {
         String email = jwtService.extractEmail(token);
