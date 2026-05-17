@@ -19,3 +19,10 @@ jwt:
   
 upload:
   dir: ${UPLOAD_DIR}
+
+python:
+  api:
+    url: ${PYTHON_API_URL}
+
+server:
+  port: 8080

@@ -14,7 +14,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/upload")
@@ -23,8 +22,11 @@ public class JobController {
 
   private final ConversationService conversationService;
 
-  @Value("${python.api.url:http://localhost:8000}")
+  @Value("${python.api.url}")
   private String pythonApiUrl;
+
+  @Value("${upload.dir}")
+  private String uploadDirPath;
 
   @PostMapping
   public ResponseEntity<?> uploadFile(@RequestParam("file") MultipartFile file) {
@@ -37,13 +39,13 @@ public class JobController {
               file.getOriginalFilename()
       );
 
-      Path uploadDir = Paths.get("../uploads");
+      Path uploadDir = Paths.get(uploadDirPath).toAbsolutePath();
       Files.createDirectories(uploadDir);
 
       String fileName = "input_" + conversation.getUser().getEmail() + "_" + conversation.getId() + ".csv";
 
       Path filePath = uploadDir.resolve(fileName);
-      file.transferTo(filePath.toFile());
+      file.transferTo(filePath);
 
       Map<String, Object> requestBody = new HashMap<>();
       requestBody.put("conversation_id", conversation.getId().toString());
