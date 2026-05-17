@@ -2,6 +2,7 @@ package com.example.data_processing_be.controller.Job;
 
 import com.example.data_processing_be.entity.Conversation;
 import com.example.data_processing_be.service.Conversation.ConversationService;
+import com.example.data_processing_be.service.Job.JobService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -20,50 +21,55 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class JobController {
 
-  private final ConversationService conversationService;
+    private final ConversationService conversationService;
+    private final JobService jobService;
 
-  @Value("${python.api.url}")
-  private String pythonApiUrl;
+    @Value("${python.api.url}")
+    private String pythonApiUrl;
 
-  @Value("${upload.dir}")
-  private String uploadDirPath;
+    @Value("${upload.dir}")
+    private String uploadDirPath;
 
-  @PostMapping
-  public ResponseEntity<?> uploadFile(@RequestParam("file") MultipartFile file) {
-    try {
-      if (file.isEmpty()) {
-        return ResponseEntity.badRequest().body("File không được để trống");
-      }
+    @PostMapping
+    public ResponseEntity<?> uploadFile(@RequestParam("file") MultipartFile file) {
+        try {
+            if (file.isEmpty()) {
+                return ResponseEntity.badRequest().body("File không được để trống");
+            }
 
-      Conversation conversation = conversationService.createConversationForCurrentUser(
-              file.getOriginalFilename()
-      );
+            Conversation conversation = conversationService.createConversationForCurrentUser(
+                    file.getOriginalFilename()
+            );
 
-      Path uploadDir = Paths.get(uploadDirPath).toAbsolutePath();
-      Files.createDirectories(uploadDir);
+            Path uploadDir = Paths.get(uploadDirPath).toAbsolutePath();
+            Files.createDirectories(uploadDir);
 
-      String fileName = "input_" + conversation.getUser().getEmail() + "_" + conversation.getId() + ".csv";
+            String fileName = "input_" + conversation.getUser().getEmail() + "_" + conversation.getId() + ".csv";
+            Path filePath = uploadDir.resolve(fileName);
+            file.transferTo(filePath);
 
-      Path filePath = uploadDir.resolve(fileName);
-      file.transferTo(filePath);
+            jobService.createJob(
+                    conversation,
+                    file.getOriginalFilename(),
+                    filePath.toString().replace("\\", "/")
+            );
 
-      Map<String, Object> requestBody = new HashMap<>();
-      requestBody.put("conversation_id", conversation.getId().toString());
-      requestBody.put("user_id", conversation.getUser().getId().toString());
-      requestBody.put("file_path", filePath.toString().replace("\\", "/"));
+            Map<String, Object> requestBody = new HashMap<>();
+            requestBody.put("conversation_id", conversation.getId().toString());
+            requestBody.put("user_id", conversation.getUser().getId().toString());
+            requestBody.put("file_path", filePath.toString().replace("\\", "/"));
 
-      RestTemplate restTemplate = new RestTemplate();
+            RestTemplate restTemplate = new RestTemplate();
+            restTemplate.postForObject(
+                    pythonApiUrl + "/jobs/start",
+                    requestBody,
+                    Object.class
+            );
 
-      Object pythonResponse = restTemplate.postForObject(
-              pythonApiUrl + "/jobs/start",
-              requestBody,
-              Object.class
-      );
+            return ResponseEntity.ok().build();
 
-      return ResponseEntity.ok(pythonResponse);
-
-    } catch (Exception e) {
-      return ResponseEntity.status(500).body("Upload thất bại: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Upload thất bại: " + e.getMessage());
+        }
     }
-  }
 }
