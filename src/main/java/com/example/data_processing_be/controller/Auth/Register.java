@@ -22,7 +22,7 @@ public class Register {
     String fullName = request.getFullName();
     String email = request.getEmail();
     String password = request.getPassword();
-    registerService.register(fullName, email, password);
+    registerService.register(email, password, fullName);
     return ResponseEntity.ok().body(AuthResponse.builder().message("Tạo tài khoản thành công").build());
   }
 }
