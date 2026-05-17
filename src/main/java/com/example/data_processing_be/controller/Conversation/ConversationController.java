@@ -1,6 +1,6 @@
 package com.example.data_processing_be.controller.Conversation;
 
-import com.example.data_processing_be.service.ConversationService;
+import com.example.data_processing_be.service.Conversation.ConversationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

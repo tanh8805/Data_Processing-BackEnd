@@ -1,4 +1,4 @@
-package com.example.data_processing_be.service;
+package com.example.data_processing_be.service.Conversation;
 
 import com.example.data_processing_be.dto.Conversation.ConversationResponse;
 import com.example.data_processing_be.entity.Conversation;
@@ -28,7 +28,7 @@ public class ConversationService {
     return conversationRepository.findByUserOrderByCreatedAtDesc(user)
             .stream()
             .map(conversation -> ConversationResponse.builder()
-                    .conversation_id(conversation.getConversationId())
+                    .conversation_id(conversation.getId())
                     .title(conversation.getTitle())
                     .status(conversation.getStatus())
                     .created_at(conversation.getCreatedAt())
@@ -51,7 +51,7 @@ public class ConversationService {
     return conversationRepository.save(conversation);
   }
   public Conversation updateConversationStatus(UUID conversationId, String status) {
-    Conversation conversation = conversationRepository.findByConversationId(conversationId)
+    Conversation conversation = conversationRepository.findById(conversationId)
             .orElseThrow(() -> new RuntimeException("Không tìm thấy conversation"));
 
     conversation.setStatus(status);

@@ -1,7 +1,7 @@
 package com.example.data_processing_be.controller.Job;
 
 import com.example.data_processing_be.entity.Conversation;
-import com.example.data_processing_be.service.ConversationService;
+import com.example.data_processing_be.service.Conversation.ConversationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -40,14 +40,14 @@ public class JobController {
       Path uploadDir = Paths.get("../uploads");
       Files.createDirectories(uploadDir);
 
-      String fileName = "input_" + conversation.getUser().getEmail() + "_" + conversation.getConversationId() + ".csv";
+      String fileName = "input_" + conversation.getUser().getEmail() + "_" + conversation.getId() + ".csv";
 
       Path filePath = uploadDir.resolve(fileName);
       file.transferTo(filePath.toFile());
 
       Map<String, Object> requestBody = new HashMap<>();
-      requestBody.put("conversation_id", conversation.getConversationId().toString());
-      requestBody.put("user_id", conversation.getUser().getUserId().toString());
+      requestBody.put("conversation_id", conversation.getId().toString());
+      requestBody.put("user_id", conversation.getUser().getId().toString());
       requestBody.put("file_path", filePath.toString().replace("\\", "/"));
 
       RestTemplate restTemplate = new RestTemplate();

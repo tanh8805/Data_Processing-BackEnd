@@ -20,9 +20,6 @@ public class Job {
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
-  @Column(name = "conversation_id", nullable = false, unique = true, length = 100)
-  private String conversationId;
-
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "conversation_id", nullable = false)
   private Conversation conversation;

@@ -20,9 +20,6 @@ public class Conversation {
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
-  @Column(name = "conversation_id", nullable = false, unique = true)
-  private UUID conversationId;
-
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "user_id", nullable = false)
   private User user;
@@ -43,10 +40,6 @@ public class Conversation {
   public void prePersist() {
     this.createdAt = LocalDateTime.now();
     this.updatedAt = LocalDateTime.now();
-
-    if (this.conversationId == null) {
-      this.conversationId = UUID.randomUUID();
-    }
 
     if (this.status == null) {
       this.status = "ACTIVE";

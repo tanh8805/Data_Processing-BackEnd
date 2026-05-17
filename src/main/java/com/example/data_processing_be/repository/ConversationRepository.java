@@ -10,6 +10,4 @@ import java.util.UUID;
 
 public interface ConversationRepository extends JpaRepository<Conversation, UUID> {
   List<Conversation> findByUserOrderByCreatedAtDesc(User user);
-
-  Optional<Conversation> findByConversationId(UUID conversationId);
 }

@@ -32,17 +32,19 @@ public class JwtService {
   }
 
   public String extractEmail(String token){
-    return Jwts.parserBuilder()
-            .setSigningKey(Keys.hmacShaKeyFor(JWT_SECRET.getBytes()))
+    return Jwts.parser()
+            .verifyWith(Keys.hmacShaKeyFor(JWT_SECRET.getBytes()))
             .build()
-            .parseClaimsJws(token).getBody().getSubject();
+            .parseSignedClaims(token)
+            .getPayload()
+            .getSubject();
   }
   private Claims extractAllClaims(String token) {
-    return Jwts.parserBuilder()
-            .setSigningKey(Keys.hmacShaKeyFor(JWT_SECRET.getBytes()))
+    return Jwts.parser()
+            .verifyWith(Keys.hmacShaKeyFor(JWT_SECRET.getBytes()))
             .build()
-            .parseClaimsJws(token)
-            .getBody();
+            .parseSignedClaims(token)
+            .getPayload();
   }
   public Date extractExpiration(String token) {
     return extractAllClaims(token).getExpiration();

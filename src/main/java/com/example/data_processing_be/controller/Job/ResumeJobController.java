@@ -2,7 +2,7 @@ package com.example.data_processing_be.controller.Job;
 
 import com.example.data_processing_be.entity.User;
 import com.example.data_processing_be.repository.UserRepository;
-import com.example.data_processing_be.service.ConversationService;
+import com.example.data_processing_be.service.Conversation.ConversationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -37,7 +37,7 @@ public class ResumeJobController {
 
       Map<String, Object> requestBody = new HashMap<>();
       requestBody.put("conversation_id", conversationId.toString());
-      requestBody.put("user_id", user.getUserId().toString());
+      requestBody.put("user_id", user.getId().toString());
       requestBody.put("answer", answer);
 
       RestTemplate restTemplate = new RestTemplate();
