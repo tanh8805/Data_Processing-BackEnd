@@ -37,6 +37,11 @@ public class ResumeJobController {
 
             String inputFilePath = jobService.getInputFilePath(conversationId);
 
+            if (inputFilePath == null || inputFilePath.isBlank()) {
+                return ResponseEntity.status(500)
+                    .body("Không tìm thấy input_file_path cho job này");
+            }
+
             Map<String, Object> requestBody = new HashMap<>();
             requestBody.put("conversation_id", conversationId.toString());
             requestBody.put("user_id", user.getId().toString());

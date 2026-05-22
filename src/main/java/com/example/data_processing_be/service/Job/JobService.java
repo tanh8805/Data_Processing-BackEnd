@@ -86,4 +86,15 @@ public class JobService {
         job.setStatus("WAITING_USER");
         jobRepository.save(job);
     }
+
+    public Job getJobForUser(UUID conversationId, UUID userId) {
+        Job job = jobRepository.findByConversationId(conversationId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy job"));
+
+        if (!job.getConversation().getUser().getId().equals(userId)) {
+            throw new RuntimeException("Bạn không có quyền truy cập job này");
+        }
+
+        return job;
+    }
 }
