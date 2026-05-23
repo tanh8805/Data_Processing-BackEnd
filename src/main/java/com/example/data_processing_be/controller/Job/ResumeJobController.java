@@ -5,6 +5,7 @@ import com.example.data_processing_be.repository.UserRepository;
 import com.example.data_processing_be.service.Job.JobService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -36,10 +37,9 @@ public class ResumeJobController {
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy user"));
 
             String inputFilePath = jobService.getInputFilePath(conversationId);
-
             if (inputFilePath == null || inputFilePath.isBlank()) {
                 return ResponseEntity.status(500)
-                    .body("Không tìm thấy input_file_path cho job này");
+                        .body("Không tìm thấy input_file_path cho job này");
             }
 
             Map<String, Object> requestBody = new HashMap<>();
@@ -48,15 +48,18 @@ public class ResumeJobController {
             requestBody.put("answer", answer);
             requestBody.put("input_file_path", inputFilePath);
 
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
+
             RestTemplate restTemplate = new RestTemplate();
             restTemplate.postForObject(
                     pythonApiUrl + "/jobs/resume",
-                    requestBody,
+                    entity,
                     Object.class
             );
 
             return ResponseEntity.ok().build();
-
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Resume job thất bại: " + e.getMessage());
         }
