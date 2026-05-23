@@ -23,7 +23,7 @@ public class JobService {
     public Job createJob(Conversation conversation, String originalFileName, String inputFilePath) {
         Job job = Job.builder()
                 .conversation(conversation)
-                .user(conversation.getUser())  // FIX: set user từ conversation
+                .user(conversation.getUser())  
                 .originalFileName(originalFileName)
                 .inputFilePath(inputFilePath)
                 .status("PROCESSING")
