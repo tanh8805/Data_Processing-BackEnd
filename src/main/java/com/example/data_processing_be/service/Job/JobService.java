@@ -23,11 +23,11 @@ public class JobService {
     public Job createJob(Conversation conversation, String originalFileName, String inputFilePath) {
         Job job = Job.builder()
                 .conversation(conversation)
+                .user(conversation.getUser())  // FIX: set user từ conversation
                 .originalFileName(originalFileName)
                 .inputFilePath(inputFilePath)
                 .status("PROCESSING")
                 .build();
-
         return jobRepository.save(job);
     }
 
@@ -40,16 +40,13 @@ public class JobService {
     public void saveEvent(UUID conversationId, String eventType, Object payload) {
         Job job = jobRepository.findByConversationId(conversationId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy job"));
-
         try {
             String payloadJson = objectMapper.writeValueAsString(payload);
-
             JobEvent event = JobEvent.builder()
                     .job(job)
                     .eventType(eventType)
                     .payload(payloadJson)
                     .build();
-
             jobEventRepository.save(event);
         } catch (Exception e) {
             System.out.println("Lỗi lưu event: " + e.getMessage());
@@ -75,14 +72,12 @@ public class JobService {
         job.setInvalidRowsCount(invalidCount);
         job.setTotalRows(validCount + invalidCount);
         job.setOutputFilePath((String) payload.get("output_file_path"));
-
         jobRepository.save(job);
     }
 
     public void interruptJob(UUID conversationId) {
         Job job = jobRepository.findByConversationId(conversationId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy job"));
-
         job.setStatus("WAITING_USER");
         jobRepository.save(job);
     }
@@ -90,11 +85,9 @@ public class JobService {
     public Job getJobForUser(UUID conversationId, UUID userId) {
         Job job = jobRepository.findByConversationId(conversationId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy job"));
-
         if (!job.getConversation().getUser().getId().equals(userId)) {
             throw new RuntimeException("Bạn không có quyền truy cập job này");
         }
-
         return job;
     }
 }
