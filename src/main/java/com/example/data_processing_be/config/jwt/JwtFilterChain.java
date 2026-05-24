@@ -1,5 +1,7 @@
 package com.example.data_processing_be.config.jwt;
 
+import com.example.data_processing_be.entity.User;
+import com.example.data_processing_be.repository.UserRepository;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -19,47 +21,54 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 public class JwtFilterChain extends OncePerRequestFilter {
-  private final JwtService jwtService;
 
-  @Override
-  protected boolean shouldNotFilter(HttpServletRequest request) {
-    String path = request.getServletPath();
-    return path.startsWith("/api/auth/");
-  }
+    private final JwtService jwtService;
+    private final UserRepository userRepository; 
 
-  @Override
-  protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-    String authHeader = request.getHeader("Authorization");
-    if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-      filterChain.doFilter(request, response);
-      return;
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getServletPath();
+        return path.startsWith("/api/auth/");
     }
-    String token = authHeader.substring(7);
-    try{
-      if(jwtService.isTokenExpired(token)){
-        response.setContentType("application/json");
-        response.setStatus(401);
-        response.getWriter().write("{\"message\":\"Token hết hạn\"}");
-        return;
-      }
-      if (SecurityContextHolder.getContext().getAuthentication() == null) {
-        String email = jwtService.extractEmail(token);
 
-        List<GrantedAuthority> authorities =
-                List.of(new SimpleGrantedAuthority("ROLE_USER"));
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
 
-        UsernamePasswordAuthenticationToken authentication =
-                new UsernamePasswordAuthenticationToken(email, null, authorities);
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-      }
+        String token = authHeader.substring(7);
+        try {
+            if (jwtService.isTokenExpired(token)) {
+                response.setContentType("application/json");
+                response.setStatus(401);
+                response.getWriter().write("{\"message\":\"Token hết hạn\"}");
+                return;
+            }
+
+            if (SecurityContextHolder.getContext().getAuthentication() == null) {
+                String email = jwtService.extractEmail(token);
+
+                User user = userRepository.findByEmail(email)
+                        .orElseThrow(() -> new RuntimeException("User không tồn tại"));
+
+                List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_USER"));
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(user, null, authorities);
+
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
+        } catch (Exception e) {
+            response.setContentType("application/json");
+            response.setStatus(401);
+            response.getWriter().write("{\"error\": \"Unauthorized\", \"message\": \"Token không hợp lệ!\"}");
+            return;
+        }
+
+        filterChain.doFilter(request, response);
     }
-    catch (Exception e) {
-      response.setContentType("application/json");
-      response.setStatus(401);
-      response.getWriter().write("{\"error\": \"Unauthorized\", \"message\": \"Token không hợp lệ!\"}");
-      return;
-    }
-    filterChain.doFilter(request, response);
-  }
 }
