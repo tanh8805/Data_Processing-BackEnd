@@ -7,12 +7,14 @@ import com.example.data_processing_be.repository.JobEventRepository;
 import com.example.data_processing_be.repository.JobRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class JobService {
@@ -39,8 +41,26 @@ public class JobService {
     }
 
     public void saveEvent(UUID conversationId, String eventType, Object payload) {
-        Job job = jobRepository.findByConversationId(conversationId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy job"));
+        Job job = null;
+        int maxRetry = 5;
+        for (int i = 0; i < maxRetry; i++) {
+            job = jobRepository.findByConversationId(conversationId).orElse(null);
+            if (job != null)
+                break;
+            try {
+                log.warn("[SAVE_EVENT] Job chưa tồn tại, retry {}/{}, conversation_id={}", i + 1, maxRetry,
+                        conversationId);
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+
+        if (job == null) {
+            log.error("[SAVE_EVENT] Không tìm thấy job sau {} lần retry, conversation_id={}", maxRetry, conversationId);
+            return;
+        }
+
         try {
             String payloadJson = objectMapper.writeValueAsString(payload);
             JobEvent event = JobEvent.builder()
@@ -50,7 +70,7 @@ public class JobService {
                     .build();
             jobEventRepository.save(event);
         } catch (Exception e) {
-            System.out.println("Lỗi lưu event: " + e.getMessage());
+            log.error("[SAVE_EVENT] Lỗi lưu event: {}", e.getMessage());
         }
     }
 

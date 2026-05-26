@@ -22,7 +22,7 @@ public class JobEvent {
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "conversation_id", nullable = false)
+    @JoinColumn(name = "job_id", nullable = false)
     private Job job;
 
     @Column(name = "event_type", nullable = false, length = 50)
