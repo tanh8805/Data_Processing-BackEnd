@@ -9,7 +9,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
 import java.util.UUID;
@@ -22,7 +21,6 @@ public class JobService {
     private final JobEventRepository jobEventRepository;
     private final ObjectMapper objectMapper;
 
-    @Transactional
     public Job createJob(Conversation conversation, String originalFileName, String inputFilePath) {
         Job job = Job.builder()
                 .conversation(conversation)

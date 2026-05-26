@@ -4,6 +4,7 @@ import com.example.data_processing_be.entity.Conversation;
 import com.example.data_processing_be.service.Conversation.ConversationService;
 import com.example.data_processing_be.service.Job.JobTriggerService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/upload")
 @RequiredArgsConstructor
@@ -34,27 +36,28 @@ public class JobController {
             Conversation conversation = conversationService.createConversationForCurrentUser(
                     file.getOriginalFilename());
 
+            log.info("[UPLOAD] Conversation created: id={}", conversation.getId());
+
             Path uploadDir = Paths.get(uploadDirPath).toAbsolutePath();
             Files.createDirectories(uploadDir);
 
             String fileName = "input_" + conversation.getUser().getEmail() + "_" + conversation.getId() + ".csv";
             Path filePath = uploadDir.resolve(fileName);
             file.transferTo(filePath);
-
             String filePathStr = filePath.toString().replace("\\", "/");
 
-            // Bước 1: Save job với transaction độc lập, commit ngay
-            jobTriggerService.createJobAndTriggerPython(
-                    conversation,
-                    file.getOriginalFilename(),
-                    filePathStr);
+            jobTriggerService.createJob(conversation, file.getOriginalFilename(), filePathStr);
 
-            // Bước 2: Gọi Python sau khi job đã chắc chắn có trong DB
+            log.info("[UPLOAD] Job created for conversation: id={}", conversation.getId());
+
             jobTriggerService.triggerPython(conversation, filePathStr);
+
+            log.info("[UPLOAD] Python triggered: conversation_id={}", conversation.getId());
 
             return ResponseEntity.ok().build();
 
         } catch (Exception e) {
+            log.error("[UPLOAD] Thất bại: {}", e.getMessage(), e);
             return ResponseEntity.status(500).body("Upload thất bại: " + e.getMessage());
         }
     }
