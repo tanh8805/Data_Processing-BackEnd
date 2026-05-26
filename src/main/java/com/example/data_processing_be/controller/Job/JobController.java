@@ -23,6 +23,7 @@ public class JobController {
 
     private final ConversationService conversationService;
     private final JobService jobService;
+    private final JobTriggerService jobTriggerService; // ← tách riêng
 
     @Value("${python.api.url}")
     private String pythonApiUrl;
@@ -38,8 +39,7 @@ public class JobController {
             }
 
             Conversation conversation = conversationService.createConversationForCurrentUser(
-                    file.getOriginalFilename()
-            );
+                    file.getOriginalFilename());
 
             Path uploadDir = Paths.get(uploadDirPath).toAbsolutePath();
             Files.createDirectories(uploadDir);
@@ -48,23 +48,13 @@ public class JobController {
             Path filePath = uploadDir.resolve(fileName);
             file.transferTo(filePath);
 
-            jobService.createJob(
+            String filePathStr = filePath.toString().replace("\\", "/");
+
+            // ✅ Save job và commit xong mới gọi Python
+            jobTriggerService.createJobAndTriggerPython(
                     conversation,
                     file.getOriginalFilename(),
-                    filePath.toString().replace("\\", "/")
-            );
-
-            Map<String, Object> requestBody = new HashMap<>();
-            requestBody.put("conversation_id", conversation.getId().toString());
-            requestBody.put("user_id", conversation.getUser().getId().toString());
-            requestBody.put("file_path", filePath.toString().replace("\\", "/"));
-
-            RestTemplate restTemplate = new RestTemplate();
-            restTemplate.postForObject(
-                    pythonApiUrl + "/jobs/start",
-                    requestBody,
-                    Object.class
-            );
+                    filePathStr);
 
             return ResponseEntity.ok().build();
 
