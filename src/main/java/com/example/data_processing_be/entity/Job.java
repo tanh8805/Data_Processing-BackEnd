@@ -39,6 +39,9 @@ public class Job {
   @Column(name = "impute_strategy", length = 50)
   private String imputeStrategy;
 
+  @Column(name = "impute_prompt", columnDefinition = "TEXT")
+  private String imputePrompt;
+
   @Column(name = "total_rows")
   private Integer totalRows;
 
@@ -60,7 +63,6 @@ public class Job {
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "user_id", nullable = false)
   private User user;
-
 
   @PrePersist
   public void prePersist() {

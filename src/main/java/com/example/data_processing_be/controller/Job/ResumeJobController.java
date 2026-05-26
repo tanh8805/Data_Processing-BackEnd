@@ -29,12 +29,21 @@ public class ResumeJobController {
     @PostMapping("/{conversationId}/resume")
     public ResponseEntity<?> resumeJob(
             @PathVariable UUID conversationId,
-            @RequestParam String answer
-    ) {
+            @RequestParam String answer,
+            @RequestParam(required = false) String prompt) {
         try {
-            String email = SecurityContextHolder.getContext().getAuthentication().getName();
+            String email = SecurityContextHolder.getContext().getAuthentication() != null
+                    ? SecurityContextHolder.getContext().getAuthentication().getName()
+                    : null;
+            if (email == null || email.isBlank()) {
+                return ResponseEntity.status(401).body("Chưa đăng nhập");
+            }
+
             User user = userRepository.findByEmail(email)
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy user"));
+
+            // persist user's choice for audit/debug/UI display
+            jobService.saveImputeChoice(conversationId, user.getId(), answer, prompt);
 
             String inputFilePath = jobService.getInputFilePath(conversationId);
             if (inputFilePath == null || inputFilePath.isBlank()) {
@@ -47,6 +56,9 @@ public class ResumeJobController {
             requestBody.put("user_id", user.getId().toString());
             requestBody.put("answer", answer);
             requestBody.put("input_file_path", inputFilePath);
+            if (prompt != null && !prompt.isBlank()) {
+                requestBody.put("prompt", prompt);
+            }
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
@@ -56,8 +68,7 @@ public class ResumeJobController {
             restTemplate.postForObject(
                     pythonApiUrl + "/jobs/resume",
                     entity,
-                    Object.class
-            );
+                    Object.class);
 
             return ResponseEntity.ok().build();
         } catch (Exception e) {

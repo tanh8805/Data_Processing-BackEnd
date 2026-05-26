@@ -52,6 +52,8 @@ CREATE TABLE jobs (
 
     impute_strategy VARCHAR(50),
 
+    impute_prompt TEXT,
+
     total_rows INT DEFAULT 0,
 
     valid_rows_count INT DEFAULT 0,

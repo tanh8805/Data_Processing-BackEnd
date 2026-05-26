@@ -101,4 +101,17 @@ public class JobService {
         }
         return job;
     }
+
+    public void saveImputeChoice(UUID conversationId, UUID userId, String strategy, String prompt) {
+        Job job = getJobForUser(conversationId, userId);
+        if (strategy != null) {
+            job.setImputeStrategy(strategy);
+        }
+        if (prompt != null && !prompt.isBlank()) {
+            job.setImputePrompt(prompt);
+        } else {
+            job.setImputePrompt(null);
+        }
+        jobRepository.save(job);
+    }
 }
