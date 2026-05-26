@@ -1,5 +1,6 @@
 package com.example.data_processing_be.controller.Conversation;
 
+import org.springframework.security.access.AccessDeniedException;
 import com.example.data_processing_be.dto.Conversation.UpdateConversationTitleRequest;
 import com.example.data_processing_be.service.Conversation.ConversationService;
 import lombok.RequiredArgsConstructor;
