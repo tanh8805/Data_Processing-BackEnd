@@ -1,5 +1,4 @@
 name: Build and Push Docker Image
-
 on:
   push:
     branches:
@@ -7,15 +6,19 @@ on:
     paths:
       - "src/**"
       - ".github/workflows/deploy.yml"
-    workflow_dispatch:
+  workflow_dispatch:
 jobs:
   test:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
-      - run: docker compose up -d
+
+      - name: Start postgres clean
+        run: |
+          docker compose down -v
+          docker compose up -d postgres
+
       - name: Wait for postgres to be healthy
         run: |
           for i in {1..20}; do
@@ -23,21 +26,24 @@ jobs:
             echo "Waiting for postgres... ($i)"
             sleep 3
           done
+
       - name: Set up Java
         uses: actions/setup-java@v3
         with:
           distribution: "temurin"
           java-version: "17"
+
       - run: chmod +x gradlew
+
       - name: Build project
-        run: ./gradlew test --info
+        run: ./gradlew test
         env:
           SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/data_processing_be
           SPRING_DATASOURCE_USERNAME: tuananh
           SPRING_DATASOURCE_PASSWORD: ${{ secrets.DB_PASSWORD }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           JWT_EXPIRATION: 300000
-          UPLOAD_DIR: /tmp/uploads          
+          UPLOAD_DIR: /tmp/uploads
           PYTHON_API_URL: http://localhost:8001
 
   push-ghcr:
@@ -49,12 +55,14 @@ jobs:
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
+
       - name: Login to GHCR
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Push Docker Image
         uses: docker/build-push-action@v5
         with:
