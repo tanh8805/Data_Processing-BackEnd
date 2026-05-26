@@ -7,6 +7,7 @@ import com.example.data_processing_be.repository.JobEventRepository;
 import com.example.data_processing_be.repository.JobRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
@@ -23,7 +24,7 @@ public class JobService {
     public Job createJob(Conversation conversation, String originalFileName, String inputFilePath) {
         Job job = Job.builder()
                 .conversation(conversation)
-                .user(conversation.getUser())  
+                .user(conversation.getUser())
                 .originalFileName(originalFileName)
                 .inputFilePath(inputFilePath)
                 .status("PROCESSING")
@@ -85,8 +86,18 @@ public class JobService {
     public Job getJobForUser(UUID conversationId, UUID userId) {
         Job job = jobRepository.findByConversationId(conversationId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy job"));
-        if (!job.getConversation().getUser().getId().equals(userId)) {
-            throw new RuntimeException("Bạn không có quyền truy cập job này");
+        UUID ownerId = null;
+        if (job.getUser() != null) {
+            ownerId = job.getUser().getId();
+        } else if (job.getConversation() != null && job.getConversation().getUser() != null) {
+            ownerId = job.getConversation().getUser().getId();
+        }
+
+        if (ownerId == null) {
+            throw new RuntimeException("Job chưa có chủ sở hữu");
+        }
+        if (!ownerId.equals(userId)) {
+            throw new AccessDeniedException("Bạn không có quyền truy cập job này");
         }
         return job;
     }

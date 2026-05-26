@@ -23,7 +23,7 @@ import java.util.List;
 public class JwtFilterChain extends OncePerRequestFilter {
 
     private final JwtService jwtService;
-    private final UserRepository userRepository; 
+    private final UserRepository userRepository;
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
@@ -57,8 +57,11 @@ public class JwtFilterChain extends OncePerRequestFilter {
                         .orElseThrow(() -> new RuntimeException("User không tồn tại"));
 
                 List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_USER"));
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(user, null, authorities);
+                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(email,
+                        null, authorities);
+
+                // Keep user object available if needed later without breaking getName()
+                authentication.setDetails(user);
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }

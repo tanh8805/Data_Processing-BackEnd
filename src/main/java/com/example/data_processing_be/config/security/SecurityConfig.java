@@ -53,9 +53,11 @@ public class SecurityConfig {
         .cors(cors -> cors.configurationSource(corsConfigurationSource()))
         .authorizeHttpRequests(auth -> auth
             .requestMatchers("/api/auth/**").permitAll()
+            // SockJS/STOMP endpoints (e.g. /ws, /ws/info, /ws/**) must be reachable without
+            // a JWT header
+            .requestMatchers("/ws", "/ws/**").permitAll()
             .requestMatchers("/internal/**").access(
-                new WebExpressionAuthorizationManager("hasIpAddress('172.0.0.0/8')")
-            )
+                new WebExpressionAuthorizationManager("hasIpAddress('172.0.0.0/8')"))
             .anyRequest().authenticated())
         .addFilterBefore(jwtFilterChain, UsernamePasswordAuthenticationFilter.class);
     return http.build();
